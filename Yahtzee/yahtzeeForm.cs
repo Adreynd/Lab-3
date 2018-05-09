@@ -476,6 +476,13 @@ namespace Yahtzee
             scoreCardElement.Text = scores[i].ToString();
             scoreCardElement.Enabled = false;
 
+            rollCount = 0;
+
+            if(GameOver)
+            {
+                UpdateUserUIScoreCard();
+            }
+
             // move any rolled die into the keep dice
             // hide picture boxes for both roll and keep
 
@@ -497,6 +504,10 @@ namespace Yahtzee
 
         private void roll_DoubleClick(object sender, EventArgs e)
         {
+            Label dice = (Label)sender;
+
+            GetFirstAvailablePB();          // Pass in list of keep dice
+
             // figure out which die you clicked on
 
             // figure out where in the set of keep picture boxes there's a "space"
@@ -510,6 +521,8 @@ namespace Yahtzee
 
         private void keep_DoubleClick(object sender, EventArgs e)
         {
+            Label dice = (Label)sender;
+
             // figure out which die you clicked on
 
             // figure out where in the set of roll picture boxes there's a "space"
@@ -523,7 +536,10 @@ namespace Yahtzee
 
         private void newGameButton_Click(object sender, EventArgs e)
         {
-
+            ResetUserUIScoreCard();
+            HideAllRollDice();
+            HideAllKeepDice();
+            HideAllComputerKeepDice();
         }
         #endregion
     }
