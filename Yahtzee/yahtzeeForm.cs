@@ -36,14 +36,17 @@ namespace Yahtzee
         private const int CHANCE = 11;
         private const int YAHTZEE = 12;
 
-        private const int SCORE_CARD = 13;
-        private const int SIDED_DICE = 6;
-        private const int DICE_COUNT = 5;
+        private const int SCORE_CARD = 13;          // Number of elements the user can click on in the scorecard
+        private const int SIDED_DICE = 6;           // Number of sides on the dice being used
+        private const int DICE_COUNT = 5;           // Number of dice the user can roll/keep
 
-        private int rollCount = 0;
-        private int uScoreCardCount = 0;
+        private int rollCount = 0;          // Number of times the dice have been rolled this turn
+        private int uScoreCardCount = 0;    // Number of items that have been filled out in the UI by the user
 
-        private int[] scores = new int[SCORE_CARD];
+        private int[] scores = new int[SCORE_CARD];                 // Array of scores the user has submited to the UI
+        private List<int> keepDice = new List<int>(DICE_COUNT);     // List of dice to keep between rolls
+        private List<int> rollDice = new List<int>(DICE_COUNT);     // List of dice to roll
+
         // you'll need an instance variable for the user's scorecard - an array of 13 ints
         // as well as an instance variable for 0 to 5 dice as the user rolls - array or list<int>?
         // as well as an instance variable for 0 to 5 dice that the user wants to keep - array or list<int>? 
@@ -57,17 +60,18 @@ namespace Yahtzee
             Random rnd = new Random();
 
             for (int i = 0; i < numDie; i++)
-                dice[i] = rnd.Next(1, SIDED_DICE);
+                dice[i] = rnd.Next(1, SIDED_DICE + 1);
         }
 
         // This method moves all of the rolled dice to the keep dice before scoring.  All of the dice that
         // are being scored have to be in the same list 
         public void MoveRollDiceToKeep(List<int> roll, List<int> keep)
         {
-            for (int i = 0; i < roll.Count; i++)
+            int index = GetFirstAvailablePB(keep);
+            for (int i = 0; i < DICE_COUNT - index; i++)
             {
-                keep[i] = roll[i];
-                roll[i] = -1;
+                keep[index + i] = roll[i];      // Put items from the roll list starting at index 0, into the keep list starting at index "index"
+                roll[i] = -1;                   // Remove the item that you took from roll the roll list from the roll list
             }
         }
 
@@ -80,8 +84,8 @@ namespace Yahtzee
             int counter = 0;
 
             for (int i = 0; i < dice.Count; i++)
-                if (value == dice[i])
-                    counter++;
+                if (value == dice[i])           // If the value we are looking for is a part of the dice list...
+                    counter++;                  // Add one to the counter
             return counter;
         }
 
@@ -97,7 +101,7 @@ namespace Yahtzee
             int[] array = new int[SIDED_DICE];
 
             for (int i = 0; i < SIDED_DICE; i++)
-                array[i] = Count(i, dice);
+                array[i] = Count(i + 1, dice);
             return array;
         }
 
@@ -210,7 +214,7 @@ namespace Yahtzee
 
         private int ScoreSmallStraight(int[] counts)
         {
-            if ((counts[THREES] > 0 && counts[FOURS] > 0) && ((counts[TWOS] > 0 && (counts[ONES] > 0 ||counts[FIVES] > 0)) ||
+            if ((counts[THREES] > 0 && counts[FOURS] > 0) && ((counts[TWOS] > 0 && (counts[ONES] > 0 || counts[FIVES] > 0)) ||
                 (counts[FIVES] > 0 && counts[SIXES] > 0)))
                 return 30;
 
@@ -279,25 +283,26 @@ namespace Yahtzee
         }
 
         // this set has to do with user's scorecard UI
-        private void ResetUserUIScoreCard()
+        private void ResetUserUIScoreCard()             // Reset the user score card UI
         {
             for (int i = 0; i < scores.Length; i++)
                 scores[i] = -1;
 
-            for (int i = ONES; i < YAHTZEE; i++)
+            for (int i = ONES; i < SCORE_CARD; i++)
             {
                 Label scoreCardElement = (Label)this.scoreCardPanel.Controls["user" + i];
                 scoreCardElement.Text = "";
                 scoreCardElement.Enabled = true;
             }
 
+            uScoreCardCount = 0;
             userSum.Text = "";
             userBonus.Text = "";
             userTotalScore.Text = "";
         }
 
         // this method adds the subtotals as well as the bonus points when the user is done playing
-        public void UpdateUserUIScoreCard()
+        public void UpdateUserUIScoreCard()             // Calculate the total score, check if the bonus was achieved, and update their two scoreboxes
         {
             int total = 0;
             int bonus = 0;
@@ -320,7 +325,10 @@ namespace Yahtzee
             for (int count = 0, i = 0; count < numDice; count++)
             {
                 if (dice[i] == -1)
+                {
                     dice.RemoveAt(i);
+                    dice.Add(-1);
+                }
                 else
                     i++;
             }
@@ -344,6 +352,7 @@ namespace Yahtzee
         public void HideKeepDie(int i)
         {
             GetKeepDie(i).Visible = false;
+            GetKeepDie(i).Enabled = false;
         }
         public void HideAllKeepDice()
         {
@@ -354,14 +363,16 @@ namespace Yahtzee
         public void ShowKeepDie(int i)
         {
             PictureBox die = GetKeepDie(i);
-            //die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + keep[i] + ".png");
+            die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + keepDice[i] + ".png");
             die.Visible = true;
+            die.Enabled = true;
         }
 
         public void ShowAllKeepDie()
         {
             for (int i = 0; i < DICE_COUNT; i++)
-                ShowKeepDie(i);
+                if (keepDice[i] > 0)
+                    ShowKeepDie(i);
         }
 
         private PictureBox GetComputerKeepDie(int i)
@@ -403,6 +414,7 @@ namespace Yahtzee
         public void HideRollDie(int i)
         {
             GetRollDie(i).Visible = false;
+            GetRollDie(i).Enabled = false;
         }
 
         public void HideAllRollDice()
@@ -414,128 +426,122 @@ namespace Yahtzee
         public void ShowRollDie(int i)
         {
             PictureBox die = GetRollDie(i);
-            //die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + roll[i] + ".png");
+            die.Image = Image.FromFile(System.Environment.CurrentDirectory + "\\..\\..\\Dice\\die" + rollDice[i] + ".png");
             die.Visible = true;
+            die.Enabled = true;
         }
 
         public void ShowAllRollDie()
         {
             for (int i = 0; i < DICE_COUNT; i++)
-                ShowRollDie(i);
+                if (rollDice[i] > 0)
+                    ShowRollDie(i);
         }
         #endregion
 
         #region Event Handlers
         private void Form1_Load(object sender, EventArgs e)
         {
+            for (int i = 0; i < DICE_COUNT; i++)    // Initialize the lists of dice to non-values
+            {
+                rollDice.Add(-1);
+                keepDice.Add(-1);
+            }
             ResetUserUIScoreCard();
             HideAllRollDice();
             HideAllKeepDice();
             HideAllComputerKeepDice();
         }
 
-        private void rollButton_Click(object sender, EventArgs e)
+        private void rollButton_Click(object sender, EventArgs e)       // Rolls dice equal 5 minus the amount of dice in the keep section, disables itself after 3 rolls
         {
-            HideAllKeepDice();
-            CollapseDice();     // Pass in a list of dice
-            ShowAllKeepDie();
+                HideAllKeepDice();
+                CollapseDice(keepDice);     // Collapse the keep dice to the left/lower indexes
+                ShowAllKeepDie();
 
-            HideAllRollDice();
-            Roll();             // Roll dice, pass in a list of dice
-            ShowAllRollDie();
+            if (GetFirstAvailablePB(keepDice) >= 0)         // If the user has dice to roll...
+            {
+                HideAllRollDice();
+                CollapseDice(rollDice);     // Collapse the roll dice to the left/lower indexes
+                Roll(DICE_COUNT - GetFirstAvailablePB(keepDice), rollDice);
+                ShowAllRollDie();
 
-            rollCount++;
-            if (rollCount > 2)
-                rollButton.Enabled = false;
-            // DON'T WORRY ABOUT ROLLING MULTIPLE TIMES UNTIL YOU CAN SCORE ONE ROLL
-            // hide all of the keep picture boxes
-            // any of the die that were moved back and forth from roll to keep by the user
-            // are "collapsed" in the keep data structure
-            // show the keep dice again
-
-            // START HERE
-            // clear the roll data structure
-            // hide all of thhe roll picture boxes
-
-            // roll the right number of dice
-            // show the roll picture boxes
-
-            // increment the number of rolls
-            // disable the button if you've rolled 3 times
+                rollCount++;
+                if (rollCount > 2)
+                    rollButton.Enabled = false;
+            }
+            else                                            // Else if the user has no dice to roll...
+                MessageBox.Show("You must move dice from the keep zone onto the board to roll them.");
         }
 
-        private void userScorecard_DoubleClick(object sender, EventArgs e)
+        private void userScorecard_DoubleClick(object sender, EventArgs e)      // When the user clicks on a section in the scorecard...
         {
-            MoveRollDiceToKeep();
-            HideAllRollDice();
-            HideAllKeepDice();
-
-            Label scoreCardElement = (Label)sender;
-            int i = int.Parse(scoreCardElement.Name.Substring(4));
-            scores[i] = Score(i, );     // Pass in a list of dice
-            scoreCardElement.Text = scores[i].ToString();
-            scoreCardElement.Enabled = false;
-
-            rollCount = 0;
-
-            if(GameOver)
+            if (rollCount > 0)
             {
-                UpdateUserUIScoreCard();
+                HideAllRollDice();          // Prepare dice to be scored...
+                HideAllKeepDice();
+                CollapseDice(rollDice);
+                CollapseDice(keepDice);
+                if (GetFirstAvailablePB(keepDice) >= 0)
+                    MoveRollDiceToKeep(rollDice, keepDice);
+
+                Label scoreCardElement = (Label)sender;                     // Find out where the user clicked
+                int i = int.Parse(scoreCardElement.Name.Substring(4));
+
+                scores[i] = Score(i, keepDice);                             // Update the scorebox the user clicked
+                scoreCardElement.Text = scores[i].ToString();
+                scoreCardElement.Enabled = false;
+
+                for (int k = 0; k < DICE_COUNT; k++)                // Reset keepDice
+                    keepDice[k] = -1;
+                rollCount = 0;                                      // Reset rollCounter and allow them to roll again
+                rollButton.Enabled = true;
+
+                uScoreCardCount++;
+                if (uScoreCardCount == SCORE_CARD)                   // Check if the user has filled out his score card...
+                {
+                    UpdateUserUIScoreCard();                        // Calculate the total score and check if the user satisfied the bonus
+                    rollButton.Enabled = false;                     // Disable rerolling until a new game starts
+                    string mess = "Your final score is " + userTotalScore.Text + ".";       // End of game message
+                    MessageBox.Show(mess);
+                }
             }
-
-            // move any rolled die into the keep dice
-            // hide picture boxes for both roll and keep
-
-            // determine which element in the score card was clicked
-            // score that element
-            // put the score in the scorecard and the UI
-            // disable this element in the score card
-
-            // clear the keep dice
-            // reset the roll count
-            // increment the number of elements in the score card that are full
-            // enable/disable buttons
-
-            // when it's the end of the game
-            // update the sum(s) and bonus parts of the score card
-            // enable/disable buttons
-            // display a message box?
         }
 
         private void roll_DoubleClick(object sender, EventArgs e)
         {
-            Label dice = (Label)sender;
+            PictureBox dice = (PictureBox)sender;           // Check what dice the user clicked on
 
-            GetFirstAvailablePB();          // Pass in list of keep dice
+            int index2 = int.Parse(dice.Name.Substring(4)); // Extrapolate the index
+            int index = GetFirstAvailablePB(keepDice);      // Get the index of the first empty spot in the keep zone
 
-            // figure out which die you clicked on
-
-            // figure out where in the set of keep picture boxes there's a "space"
-            // move the roll die value from this die to the keep data structure in the "right place"
-            // sometimes that will be at the end but if the user is moving dice back and forth
-            // it may be in the middle somewhere
-
-            // clear the die in the roll data structure
-            // hide the picture box
+            keepDice[index] = rollDice[index2];             // Remove the played dice from the board and place it into the keep zone
+            ShowKeepDie(index);
+            HideRollDie(index2);
+            rollDice[index2] = -1;
         }
 
         private void keep_DoubleClick(object sender, EventArgs e)
         {
-            Label dice = (Label)sender;
+            PictureBox dice = (PictureBox)sender;           // Check what dice the user clicked on
 
-            // figure out which die you clicked on
+            int index2 = int.Parse(dice.Name.Substring(4)); // Extrapolate the index
+            int index = GetFirstAvailablePB(rollDice);      // Get the index of the first empty spot on the board
 
-            // figure out where in the set of roll picture boxes there's a "space"
-            // move the roll die value from this die to the roll data structure in the "right place"
-            // sometimes that will be at the end but if the user is moving dice back and forth
-            // it may be in the middle somewhere
-
-            // clear the die in the keep data structure
-            // hide the picture box
+            rollDice[index] = keepDice[index2];             // Remove the played dice from the keep zone and place it onto the board
+            ShowRollDie(index);
+            HideKeepDie(index2);
+            keepDice[index2] = -1;
         }
 
         private void newGameButton_Click(object sender, EventArgs e)
         {
+            for (int i = 0; i < rollDice.Count; i++)        // Reset the dice values
+                rollDice[i] = -1;
+            for (int i = 0; i < DICE_COUNT; i++)
+                keepDice[i] = -1;
+
+            rollButton.Enabled = true;                  // Allow them to roll again
             ResetUserUIScoreCard();
             HideAllRollDice();
             HideAllKeepDice();

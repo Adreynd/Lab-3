@@ -125,8 +125,6 @@
             this.scoreCardPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.scoreCardPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.scoreCardPanel.Controls.Add(this.label50, 0, 16);
-            this.scoreCardPanel.Controls.Add(this.computerTotalScore, 2, 16);
-            this.scoreCardPanel.Controls.Add(this.userTotalScore, 1, 16);
             this.scoreCardPanel.Controls.Add(this.label49, 0, 14);
             this.scoreCardPanel.Controls.Add(this.label48, 0, 13);
             this.scoreCardPanel.Controls.Add(this.label47, 0, 12);
@@ -174,6 +172,8 @@
             this.scoreCardPanel.Controls.Add(this.computer12, 2, 15);
             this.scoreCardPanel.Controls.Add(this.label42, 0, 8);
             this.scoreCardPanel.Controls.Add(this.label43, 0, 15);
+            this.scoreCardPanel.Controls.Add(this.userTotalScore, 1, 16);
+            this.scoreCardPanel.Controls.Add(this.computerTotalScore, 2, 16);
             this.scoreCardPanel.Location = new System.Drawing.Point(479, 31);
             this.scoreCardPanel.Name = "scoreCardPanel";
             this.scoreCardPanel.RowCount = 17;
