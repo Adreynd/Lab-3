@@ -159,16 +159,16 @@ namespace Yahtzee
         /* This method returns the sum of the dice represented in the counts array.
          * The sum is the # of 1s * 1 + the # of 2s * 2 + the number of 3s * 3 etc
          */ 
-        private int Sum(int[] counts)
+        private int Sum()
         {
             int score = 0;
 
-            score += ScoreOnes(counts);
-            score += ScoreTwos(counts);
-            score += ScoreThrees(counts);
-            score += ScoreFours(counts);
-            score += ScoreFives(counts);
-            score += ScoreSixes(counts);
+            score += scores[ONES];
+            score += scores[TWOS];
+            score += scores[THREES];
+            score += scores[FOURS];
+            score += scores[FIVES];
+            score += scores[SIXES];
 
             return score;
         }
@@ -232,7 +232,16 @@ namespace Yahtzee
 
         private int ScoreChance(int[] counts)
         {
-            return Sum(counts);
+            int score = 0;
+
+            score += ScoreOnes(counts);
+            score += ScoreTwos(counts);
+            score += ScoreThrees(counts);
+            score += ScoreFours(counts);
+            score += ScoreFives(counts);
+            score += ScoreSixes(counts);
+
+            return score;
         }
 
         /* This method makes it "easy" to call the "right" scoring method when you click on an element
@@ -306,11 +315,15 @@ namespace Yahtzee
         {
             int total = 0;
             int bonus = 0;
+            int sum;
             for (int i = 0; i < scores.Length; i++)
                 total += scores[i];
 
-            if (scores[ONES] + scores[TWOS] + scores[THREES] + scores[FOURS] + scores[FIVES] + scores[SIXES] >= 65)
+            sum = Sum();
+
+            if (sum >= 65)
                 bonus = 35;
+            userSum.Text = sum.ToString();
             total += bonus;
             userBonus.Text = bonus.ToString();
             userTotalScore.Text = total.ToString();
@@ -536,7 +549,7 @@ namespace Yahtzee
 
         private void newGameButton_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < rollDice.Count; i++)        // Reset the dice values
+            for (int i = 0; i < DICE_COUNT; i++)        // Reset the dice values
                 rollDice[i] = -1;
             for (int i = 0; i < DICE_COUNT; i++)
                 keepDice[i] = -1;
